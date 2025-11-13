@@ -8,7 +8,6 @@ import pandas as pd
 from datetime import datetime
 import plotly.express as px
 import plotly.graph_objects as go
-import base64
 from functions import (
     NantouCarbonCalculator, 
     EcoRecommendationEngine,
@@ -31,43 +30,30 @@ st.set_page_config(
     initial_sidebar_state="collapsed"
 )
 
-# 載入背景圖片
-@st.cache_data
-def get_base64_image(image_path):
-    """將圖片轉換為 base64 編碼"""
-    try:
-        with open(image_path, "rb") as img_file:
-            return base64.b64encode(img_file.read()).decode()
-    except:
-        return None
-
 # 載入自定義 CSS
 def load_css():
     """載入南投自然風格的 CSS 樣式"""
     
-    # 載入背景圖片
-    bg_image = get_base64_image("images/nantou_bridge.png")
-    
-    css = f"""
+    css = """
     <style>
     /* 導入字體 */
     @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@300;400;500;700&display=swap');
     
     /* 全域樣式 */
-    .stApp {{
+    .stApp {
         font-family: 'Noto Sans TC', sans-serif;
-    }}
+    }
     
     /* 主要容器 */
-    .main-container {{
+    .main-container {
         max-width: 1200px;
         margin: 0 auto;
         padding: 20px;
-    }}
+    }
     
     /* 背景圖片設定 */
-    .hero-background {{
-        background-image: linear-gradient(rgba(0,0,0,0.4), rgba(0,0,0,0.4)), url("data:image/png;base64,{bg_image}");
+    .hero-background {
+        background-image: linear-gradient(rgba(0,0,0,0.4), rgba(0,0,0,0.4)), url("app/static/nantou_bridge.png");
         background-size: cover;
         background-position: center;
         background-repeat: no-repeat;
@@ -78,10 +64,10 @@ def load_css():
         border-radius: 15px;
         margin-bottom: 30px;
         position: relative;
-    }}
+    }
     
     /* 首頁橫幅內容 */
-    .hero-background {{
+    .hero-background {
         text-align: center;
         color: white;
         padding: 60px 20px;
@@ -89,93 +75,93 @@ def load_css():
         flex-direction: column;
         align-items: center;
         justify-content: center;
-    }}
+    }
     
-    .hero-title {{
+    .hero-title {
         font-size: 3rem;
         font-weight: 700;
         margin-bottom: 20px;
         text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
-    }}
+    }
     
-    .hero-slogan {{
+    .hero-slogan {
         font-size: 1.3rem;
         margin-bottom: 30px;
         opacity: 0.95;
         text-shadow: 1px 1px 2px rgba(0,0,0,0.5);
         line-height: 1.6;
-    }}
+    }
     
     /* Tab 樣式 */
-    .stTabs [data-baseweb="tab-list"] {{
+    .stTabs [data-baseweb="tab-list"] {
         gap: 8px;
         background-color: #f8f9fa;
         border-radius: 10px;
         padding: 5px;
-    }}
+    }
     
-    .stTabs [data-baseweb="tab"] {{
+    .stTabs [data-baseweb="tab"] {
         height: 50px;
         padding: 0px 24px;
         background-color: transparent;
         border-radius: 8px;
         color: #495057;
         font-weight: 500;
-    }}
+    }
     
-    .stTabs [aria-selected="true"] {{
+    .stTabs [aria-selected="true"] {
         background-color: white !important;
         color: #28a745 !important;
         box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-    }}
+    }
     
     /* 卡片樣式 */
-    .info-card {{
+    .info-card {
         background: white;
         padding: 25px;
         border-radius: 15px;
         box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
         margin-bottom: 20px;
         border-left: 5px solid #28a745;
-    }}
+    }
     
-    .result-card {{
+    .result-card {
         background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
         padding: 25px;
         border-radius: 15px;
         box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
         margin-bottom: 20px;
         border-left: 5px solid #007bff;
-    }}
+    }
     
     /* 環保建議卡片 */
-    .eco-card {{
+    .eco-card {
         background: linear-gradient(135deg, #d4edda 0%, #c3e6cb 100%);
         padding: 20px;
         border-radius: 12px;
         border-left: 4px solid #28a745;
         margin: 15px 0;
         box-shadow: 0 2px 4px rgba(0,0,0,0.05);
-    }}
+    }
     
     /* 樹木視覺化 */
-    .tree-visual {{
+    .tree-visual {
         text-align: center;
         padding: 25px;
         background: linear-gradient(135deg, #f0f8f0 0%, #e8f5e8 100%);
         border-radius: 15px;
         margin: 20px 0;
         box-shadow: 0 2px 4px rgba(0,0,0,0.05);
-    }}
+    }
     
-    .tree-icons {{
+    .tree-icons {
         font-size: 2.5rem;
         margin: 15px 0;
         line-height: 1.2;
-    }}
+    }
     
     /* 路線卡片 */
-    .route-card {{
+    .route-card {
         background: white;
         padding: 20px;
         border-radius: 12px;
@@ -183,25 +169,25 @@ def load_css():
         margin: 15px 0;
         border-left: 4px solid #007bff;
         transition: transform 0.2s ease;
-    }}
+    }
     
-    .route-card:hover {{
+    .route-card:hover {
         transform: translateY(-2px);
         box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-    }}
+    }
     
     /* 統計指標 */
-    .metric-card {{
+    .metric-card {
         background: white;
         padding: 20px;
         border-radius: 12px;
         text-align: center;
         box-shadow: 0 2px 4px rgba(0,0,0,0.1);
         margin: 10px 0;
-    }}
+    }
     
     /* 數據來源說明 */
-    .data-source {{
+    .data-source {
         background: #f8f9fa;
         padding: 20px;
         border-radius: 12px;
@@ -209,10 +195,10 @@ def load_css():
         color: #666;
         margin-top: 30px;
         border-top: 3px solid #dee2e6;
-    }}
+    }
     
     /* 按鈕樣式 */
-    .stButton > button {{
+    .stButton > button {
         background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
         color: white;
         border: none;
@@ -220,43 +206,41 @@ def load_css():
         padding: 12px 30px;
         font-weight: 500;
         transition: all 0.3s ease;
-    }}
+    }
     
-    .stButton > button:hover {{
+    .stButton > button:hover {
         transform: translateY(-2px);
         box-shadow: 0 4px 8px rgba(40, 167, 69, 0.3);
-    }}
+    }
     
     /* 行動裝置適配 */
-    @media (max-width: 768px) {{
-        .hero-title {{
+    @media (max-width: 768px) {
+        .hero-title {
             font-size: 2.2rem;
-        }}
+        }
         
-        .hero-slogan {{
+        .hero-slogan {
             font-size: 1.1rem;
-        }}
+        }
         
-        .info-card, .result-card {{
+        .info-card, .result-card {
             padding: 20px;
-        }}
+        }
         
-        .hero-background {{
+        .hero-background {
             min-height: 300px;
-        }}
-        
-
-    }}
+        }
+    }
     
     /* Streamlit 控制欄確保可見 */
-    .stApp > header {{
+    .stApp > header {
         background-color: transparent;
         z-index: 999;
-    }}
+    }
     
     /* 隱藏部分 Streamlit 預設元素 */
-    #MainMenu {{visibility: visible;}}
-    footer {{visibility: hidden;}}
+    #MainMenu {visibility: visible;}
+    footer {visibility: hidden;}
     </style>
     """
     st.markdown(css, unsafe_allow_html=True)
@@ -412,29 +396,8 @@ def render_carbon_calculator_tab():
         submitted = st.form_submit_button("🧮 開始計算您的永續影響力", type="primary")
         
         # 在計算按鈕下方添加糯米橋圖片
-        footer_image = get_base64_image("images/nantou_bridge_footer.png")
-        if footer_image:
-            st.markdown(f"""
-            <div style="text-align: center; margin: 30px 0; width: 100%;">
-                <img src="data:image/png;base64,{footer_image}" 
-                     style="
-                        width: 100%; 
-                        height: auto; 
-                        border-radius: 15px; 
-                        opacity: 0.3;
-                        object-fit: cover;
-                        transition: all 0.3s ease;
-                        max-height: 400px;
-                     ">
-            </div>
-            <style>
-            @media (max-width: 768px) {{
-                .footer-image {{
-                    max-height: 250px;
-                }}
-            }}
-            </style>
-            """, unsafe_allow_html=True)
+        try:
+            st.image("images/nantou_bridge_footer.png", use_container_width=True)
         
         if submitted:
             # 驗證輸入
