@@ -8,6 +8,8 @@ import pandas as pd
 from datetime import datetime
 import plotly.express as px
 import plotly.graph_objects as go
+import base64
+from pathlib import Path
 from functions import (
     NantouCarbonCalculator, 
     EcoRecommendationEngine,
@@ -30,30 +32,50 @@ st.set_page_config(
     initial_sidebar_state="collapsed"
 )
 
+# 新增：將圖片轉換為 base64 的函數
+def get_base64_image(image_path):
+    """將圖片轉換為 base64 編碼"""
+    try:
+        with open(image_path, "rb") as img_file:
+            return base64.b64encode(img_file.read()).decode()
+    except FileNotFoundError:
+        st.warning(f"找不到圖片: {image_path}")
+        return None
+
 # 載入自定義 CSS
 def load_css():
     """載入南投自然風格的 CSS 樣式"""
     
-    css = """
+    # 嘗試載入背景圖片
+    bg_image_base64 = get_base64_image("images/nantou_bridge.png")
+    
+    # 如果成功載入圖片，使用 base64 編碼
+    if bg_image_base64:
+        hero_bg_style = f'background-image: linear-gradient(rgba(0,0,0,0.4), rgba(0,0,0,0.4)), url("data:image/png;base64,{bg_image_base64}");'
+    else:
+        # 如果載入失敗，使用漸層背景
+        hero_bg_style = 'background: linear-gradient(135deg, #2c5530 0%, #1a3a1f 100%);'
+    
+    css = f"""
     <style>
     /* 導入字體 */
     @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@300;400;500;700&display=swap');
     
     /* 全域樣式 */
-    .stApp {
+    .stApp {{
         font-family: 'Noto Sans TC', sans-serif;
-    }
+    }}
     
     /* 主要容器 */
-    .main-container {
+    .main-container {{
         max-width: 1200px;
         margin: 0 auto;
         padding: 20px;
-    }
+    }}
     
-    /* 背景圖片設定 - 修正圖片路徑 */
-    .hero-background {
-        background-image: linear-gradient(rgba(0,0,0,0.4), rgba(0,0,0,0.4)), url("images/nantou_bridge.png");
+    /* 背景圖片設定 - 使用 base64 編碼 */
+    .hero-background {{
+        {hero_bg_style}
         background-size: cover;
         background-position: center;
         background-repeat: no-repeat;
@@ -64,104 +86,97 @@ def load_css():
         border-radius: 15px;
         margin-bottom: 30px;
         position: relative;
-    }
-    
-    /* 首頁橫幅內容 */
-    .hero-background {
         text-align: center;
         color: white;
         padding: 60px 20px;
-        display: flex;
         flex-direction: column;
-        align-items: center;
-        justify-content: center;
-    }
+    }}
     
-    .hero-title {
+    .hero-title {{
         font-size: 3rem;
         font-weight: 700;
         margin-bottom: 20px;
         text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
-    }
+    }}
     
-    .hero-slogan {
+    .hero-slogan {{
         font-size: 1.3rem;
         margin-bottom: 30px;
         opacity: 0.95;
         text-shadow: 1px 1px 2px rgba(0,0,0,0.5);
         line-height: 1.6;
-    }
+    }}
     
     /* Tab 樣式 */
-    .stTabs [data-baseweb="tab-list"] {
+    .stTabs [data-baseweb="tab-list"] {{
         gap: 8px;
         background-color: #f8f9fa;
         border-radius: 10px;
         padding: 5px;
-    }
+    }}
     
-    .stTabs [data-baseweb="tab"] {
+    .stTabs [data-baseweb="tab"] {{
         height: 50px;
         padding: 0px 24px;
         background-color: transparent;
         border-radius: 8px;
         color: #495057;
         font-weight: 500;
-    }
+    }}
     
-    .stTabs [aria-selected="true"] {
+    .stTabs [aria-selected="true"] {{
         background-color: white !important;
         color: #28a745 !important;
         box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-    }
+    }}
     
     /* 卡片樣式 */
-    .info-card {
+    .info-card {{
         background: white;
         padding: 25px;
         border-radius: 15px;
         box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
         margin-bottom: 20px;
         border-left: 5px solid #28a745;
-    }
+    }}
     
-    .result-card {
+    .result-card {{
         background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
         padding: 25px;
         border-radius: 15px;
         box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
         margin-bottom: 20px;
         border-left: 5px solid #007bff;
-    }
+    }}
     
     /* 環保建議卡片 */
-    .eco-card {
+    .eco-card {{
         background: linear-gradient(135deg, #d4edda 0%, #c3e6cb 100%);
         padding: 20px;
         border-radius: 12px;
         border-left: 4px solid #28a745;
         margin: 15px 0;
         box-shadow: 0 2px 4px rgba(0,0,0,0.05);
-    }
+    }}
     
     /* 樹木視覺化 */
-    .tree-visual {
+    .tree-visual {{
         text-align: center;
         padding: 25px;
         background: linear-gradient(135deg, #f0f8f0 0%, #e8f5e8 100%);
         border-radius: 15px;
         margin: 20px 0;
         box-shadow: 0 2px 4px rgba(0,0,0,0.05);
-    }
+    }}
     
-    .tree-icons {
+    .tree-icons {{
         font-size: 2.5rem;
         margin: 15px 0;
         line-height: 1.2;
-    }
+    }}
     
     /* 路線卡片 */
-    .route-card {
+    .route-card {{
         background: white;
         padding: 20px;
         border-radius: 12px;
@@ -169,25 +184,25 @@ def load_css():
         margin: 15px 0;
         border-left: 4px solid #007bff;
         transition: transform 0.2s ease;
-    }
+    }}
     
-    .route-card:hover {
+    .route-card:hover {{
         transform: translateY(-2px);
         box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-    }
+    }}
     
     /* 統計指標 */
-    .metric-card {
+    .metric-card {{
         background: white;
         padding: 20px;
         border-radius: 12px;
         text-align: center;
         box-shadow: 0 2px 4px rgba(0,0,0,0.1);
         margin: 10px 0;
-    }
+    }}
     
     /* 數據來源說明 */
-    .data-source {
+    .data-source {{
         background: #f8f9fa;
         padding: 20px;
         border-radius: 12px;
@@ -195,10 +210,10 @@ def load_css():
         color: #666;
         margin-top: 30px;
         border-top: 3px solid #dee2e6;
-    }
+    }}
     
     /* 按鈕樣式 */
-    .stButton > button {
+    .stButton > button {{
         background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
         color: white;
         border: none;
@@ -206,41 +221,41 @@ def load_css():
         padding: 12px 30px;
         font-weight: 500;
         transition: all 0.3s ease;
-    }
+    }}
     
-    .stButton > button:hover {
+    .stButton > button:hover {{
         transform: translateY(-2px);
         box-shadow: 0 4px 8px rgba(40, 167, 69, 0.3);
-    }
+    }}
     
     /* 行動裝置適配 */
-    @media (max-width: 768px) {
-        .hero-title {
+    @media (max-width: 768px) {{
+        .hero-title {{
             font-size: 2.2rem;
-        }
+        }}
         
-        .hero-slogan {
+        .hero-slogan {{
             font-size: 1.1rem;
-        }
+        }}
         
-        .info-card, .result-card {
+        .info-card, .result-card {{
             padding: 20px;
-        }
+        }}
         
-        .hero-background {
+        .hero-background {{
             min-height: 300px;
-        }
-    }
+        }}
+    }}
     
     /* Streamlit 控制欄確保可見 */
-    .stApp > header {
+    .stApp > header {{
         background-color: transparent;
         z-index: 999;
-    }
+    }}
     
     /* 隱藏部分 Streamlit 預設元素 */
-    #MainMenu {visibility: visible;}
-    footer {visibility: hidden;}
+    #MainMenu {{visibility: visible;}}
+    footer {{visibility: hidden;}}
     </style>
     """
     st.markdown(css, unsafe_allow_html=True)
@@ -384,43 +399,44 @@ def render_carbon_calculator_tab():
         st.markdown('</div>', unsafe_allow_html=True)
         
         # 旅人足跡預覽
-        if 'selected_route' in locals():
-            route_info = get_route_info(selected_route)
-            st.markdown('<div class="info-card">', unsafe_allow_html=True)
-            st.subheader("👣 旅人足跡 (步行估算)")
-            walking_distance = route_info.walking_distance
-            st.success(f"🚶‍♀️ 您選擇的{route_info.name}，我們預估您將步行約 {walking_distance} 公里探索景點。這段路程，您為地球減少了碳排放！")
-            st.markdown('</div>', unsafe_allow_html=True)
+        route_info = get_route_info(selected_route)
+        st.markdown('<div class="info-card">', unsafe_allow_html=True)
+        st.subheader("👣 旅人足跡 (步行估算)")
+        walking_distance = route_info.walking_distance
+        st.success(f"🚶‍♀️ 您選擇的{route_info.name}，我們預估您將步行約 {walking_distance} 公里探索景點。這段路程，您為地球減少了碳排放！")
+        st.markdown('</div>', unsafe_allow_html=True)
         
         # 計算按鈕
         submitted = st.form_submit_button("🧮 開始計算您的永續影響力", type="primary")
+    
+    # 在表單外顯示圖片
+    try:
+        st.image("images/nantou_bridge.png", use_column_width=True)
+    except FileNotFoundError:
+        pass  # 如果圖片不存在就略過
+    except Exception as e:
+        pass  # 靜默處理其他錯誤
+    
+    if submitted:
+        # 驗證輸入
+        trip_data = {
+            'route_option': selected_route,
+            'traveler_count': traveler_count,
+            'transport_mode': selected_transport,
+            'departure_city': departure_city,
+            'dining_choice': selected_dining,
+            'coffee_choice': selected_coffee
+        }
         
-        # 在計算按鈕下方添加糯米橋圖片
-        try:
-            st.image("images/nantou_bridge_footer.png", use_container_width=True)
-        except FileNotFoundError:
-            pass  # 如果圖片不存在就略過
+        errors = NantouTripValidator.validate_trip_input(trip_data)
         
-        if submitted:
-            # 驗證輸入
-            trip_data = {
-                'route_option': selected_route,
-                'traveler_count': traveler_count,
-                'transport_mode': selected_transport,
-                'departure_city': departure_city,
-                'dining_choice': selected_dining,
-                'coffee_choice': selected_coffee
-            }
-            
-            errors = NantouTripValidator.validate_trip_input(trip_data)
-            
-            if errors:
-                for error in errors:
-                    st.error(error)
-            else:
-                # 執行計算
-                calculate_carbon_footprint(trip_data)
-                st.success("✅ 計算完成！請切換到「計算結果」頁籤查看您的永續影響力報告。")
+        if errors:
+            for error in errors:
+                st.error(error)
+        else:
+            # 執行計算
+            calculate_carbon_footprint(trip_data)
+            st.success("✅ 計算完成！請切換到「計算結果」頁籤查看您的永續影響力報告。")
 
 def render_routes_tab():
     """渲染旅遊路線 Tab"""
@@ -652,7 +668,7 @@ def render_detailed_emission_breakdown_chart(result):
     fig.update_traces(textposition='inside', textinfo='percent+label')
     fig.update_layout(height=400)
     
-    st.plotly_chart(fig, width='stretch')
+    st.plotly_chart(fig, use_container_width=True)
 
 def render_emission_breakdown_chart(result):
     """渲染碳足跡分解圓餅圖（保持向後相容）"""
@@ -686,7 +702,7 @@ def render_transport_comparison_chart(result):
         )
         
         fig.update_layout(height=400, showlegend=False)
-        st.plotly_chart(fig, width='stretch')
+        st.plotly_chart(fig, use_container_width=True)
 
 def render_eco_recommendations():
     """渲染個人化環保建議"""
