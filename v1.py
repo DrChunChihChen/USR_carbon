@@ -398,8 +398,8 @@ def render_carbon_calculator_tab():
         # 在計算按鈕下方添加糯米橋圖片
         try:
             st.image("images/nantou_bridge_footer.png", use_container_width=True)
-            except FileNotFoundError:
-        pass  # 如果圖片不存在就略過
+        except FileNotFoundError:
+            pass  # 如果圖片不存在就略過
         
         if submitted:
             # 驗證輸入
