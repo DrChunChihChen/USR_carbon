@@ -53,7 +53,7 @@ def load_css():
     
     /* 背景圖片設定 */
     .hero-background {
-        background-image: linear-gradient(rgba(0,0,0,0.4), rgba(0,0,0,0.4)), url("app/static/nantou_bridge.png");
+        background-image: linear-gradient(rgba(0,0,0,0.4), rgba(0,0,0,0.4)), url("images/nantou_bridge_footer.png");
         background-size: cover;
         background-position: center;
         background-repeat: no-repeat;
