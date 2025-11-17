@@ -51,9 +51,9 @@ def load_css():
         padding: 20px;
     }
     
-    /* 背景圖片設定 */
+    /* 背景圖片設定 - 修正圖片路徑 */
     .hero-background {
-        background-image: linear-gradient(rgba(0,0,0,0.4), rgba(0,0,0,0.4)), url("images/nantou_bridge_footer.png");
+        background-image: linear-gradient(rgba(0,0,0,0.4), rgba(0,0,0,0.4)), url("images/nantou_bridge.png");
         background-size: cover;
         background-position: center;
         background-repeat: no-repeat;
